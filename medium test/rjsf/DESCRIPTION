@@ -1,8 +1,0 @@
-Package: rjsf
-Title: R Wrapper for the Jump-Switch-Flow Package
-Version: 0.1.0
-Authors@R: person("Oliver", "Vu", role = c("aut", "cre"), email = "longvu2000.work@gmail.com")
-Description: An R interface to the Python jsf package via reticulate.
-License: MIT
-Imports: reticulate
-Encoding: UTF-8

@@ -1,7 +1,0 @@
-.DS_Store
-.Rhistory
-.RData
-__pycache__/
-*.pyc
-*.ipynb
-*_files/

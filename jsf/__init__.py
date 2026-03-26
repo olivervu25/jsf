@@ -3,7 +3,7 @@ import math
 from typing import Any, Callable, Dict, List, NewType, Tuple, Union
 from jsf.types import Time, SystemState, CompartmentValue, Trajectory
 from jsf import exact
-from jsf import sbml
+# from jsf import sbml
 
 # from numba import jit
 
