@@ -1,0 +1,94 @@
+---
+title: "Using the jsf Python Package"
+author: "Oliver Vu"
+format:
+  html:
+    toc: true
+    code-fold: false
+    theme: cosmo
+execute:
+  echo: true
+  warning: false
+---
+
+```{r echo=FALSE, results = 'hide'}
+reticulate::py_install("matplotlib")
+reticulate::py_install("jsf")
+reticulate::py_config()
+```
+
+## Introduction
+
+The `jsf` package simulates compartmental models using the Jump-Switch-Flow algorithm,
+which adaptively switches between exact stochastic simulation (when populations are small)
+and fast ODE integration (when populations are large).
+
+## Setup
+
+```{python}
+import jsf
+import random
+import matplotlib.pyplot as plt
+
+random.seed(42)
+
+import sys
+print(sys.executable)
+
+```
+
+## Lotka-Volterra Predator-Prey Model
+
+The canonical example from the jsf documentation. Two compartments: prey ($V_1$) and
+predator ($V_2$), governed by:
+
+$$\frac{dV_1}{dt} = \alpha V_1 - \beta V_1 V_2, \qquad \frac{dV_2}{dt} = \beta V_1 V_2 - \gamma V_2$$
+```{python}
+# Initial conditions
+x0 = [50, 10]
+
+# Parameters
+mA = 2.00   # prey birth rate
+mB = 0.05   # predation rate  
+mC = 1.50   # predator death rate
+
+# Rate function
+rates = lambda x, _: [mA * x[0], mC * x[1], mB * x[0] * x[1]]
+
+# Stoichiometry
+reactant = [[1, 0], [0, 1], [1, 1]]
+product  = [[2, 0], [0, 0], [0, 2]]
+
+stoich = {
+    "nu":         [[p - r for p, r in zip(pr, re)] for pr, re in zip(product, reactant)],
+    "DoDisc":     [1, 1],
+    "nuReactant": reactant,
+    "nuProduct":  product,
+}
+
+opts = {
+    "EnforceDo":         [0, 0],
+    "dt":                0.01,
+    "SwitchingThreshold": [30, 30],
+}
+
+sim = jsf.jsf(x0, rates, stoich, t_max=10, config=opts, method="operator-splitting")
+```
+
+## Results
+```{python}
+plt.figure(figsize=(8, 4))
+plt.plot(sim[1], sim[0][0], label="Prey")
+plt.plot(sim[1], sim[0][1], label="Predator")
+plt.axhline(y=opts["SwitchingThreshold"][0], color="k", linestyle="--", alpha=0.4,
+            label="Switching threshold (Ω = 30)")
+plt.xlabel("Time")
+plt.ylabel("Population size")
+plt.title("Lotka-Volterra via JSF (operator-splitting)")
+plt.legend()
+plt.tight_layout()
+plt.show()
+```
+
+The dashed line marks the switching threshold Ω = 30. Below this, JSF uses exact
+stochastic simulation — enabling extinction events that a pure ODE solver cannot produce.
